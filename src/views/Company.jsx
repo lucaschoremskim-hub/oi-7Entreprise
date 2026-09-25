@@ -1,5 +1,6 @@
-import { useRef } from 'react'
-import { Field, Icon } from '../components/ui'
+import { useRef, useState } from 'react'
+import { exportBackup, parseBackup } from '../lib/store'
+import { Confirm, Field, Icon } from '../components/ui'
 
 // Réduit le logo (max 400 px) et le convertit en PNG pour rester léger dans le stockage local
 function readLogo(file) {
@@ -23,10 +24,30 @@ function readLogo(file) {
   })
 }
 
-export default function Company({ state, setCompany }) {
+export default function Company({ state, setCompany, restoreBackup }) {
   const c = state.company
   const fileRef = useRef(null)
+  const backupRef = useRef(null)
+  const [pending, setPending] = useState(null)
+  const [message, setMessage] = useState(null)
   const patch = (p) => setCompany({ ...c, ...p })
+
+  const onBackupFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      setPending(parseBackup(await file.text()))
+      setMessage(null)
+    } catch (err) {
+      setMessage({ error: true, text: err.message })
+    }
+  }
+
+  const onExport = () => {
+    exportBackup(state)
+    setMessage({ error: false, text: 'Sauvegarde téléchargée. Conservez le fichier en lieu sûr.' })
+  }
 
   const onLogo = async (e) => {
     const file = e.target.files?.[0]
@@ -99,6 +120,41 @@ export default function Company({ state, setCompany }) {
         </div>
         <p className="hint">Affichées sur les factures pour le paiement par virement.</p>
       </section>
+
+      <section className="card">
+        <h2>Sauvegarde des données</h2>
+        <p className="hint">
+          Vos documents sont enregistrés dans ce navigateur uniquement. Téléchargez régulièrement une sauvegarde, et
+          importez-la pour retrouver vos données après un changement d’appareil ou un nettoyage du navigateur.
+        </p>
+        <p className="hint">
+          {state.docs.length} document{state.docs.length > 1 ? 's' : ''} · {state.clients.length} client{state.clients.length > 1 ? 's' : ''}
+        </p>
+        <div className="form-actions start">
+          <button className="btn btn-dark" onClick={onExport}>
+            <Icon name="download" /> Télécharger une sauvegarde
+          </button>
+          <input ref={backupRef} type="file" accept="application/json,.json" onChange={onBackupFile} hidden />
+          <button className="btn btn-ghost" onClick={() => backupRef.current.click()}>
+            <Icon name="upload" /> Importer une sauvegarde
+          </button>
+        </div>
+        {message && <p className={message.error ? 'notice err' : 'notice ok'}>{message.text}</p>}
+      </section>
+
+      {pending && (
+        <Confirm
+          title="Remplacer les données actuelles ?"
+          text={`Cette sauvegarde contient ${pending.docs.length} document(s) et ${pending.clients.length} client(s). Elle remplacera tout ce qui est enregistré actuellement dans ce navigateur.`}
+          confirmLabel="Remplacer"
+          onCancel={() => setPending(null)}
+          onConfirm={() => {
+            restoreBackup(pending)
+            setPending(null)
+            setMessage({ error: false, text: 'Sauvegarde importée.' })
+          }}
+        />
+      )}
     </div>
   )
 }

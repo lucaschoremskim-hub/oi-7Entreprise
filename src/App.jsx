@@ -65,9 +65,10 @@ export default function App() {
     })
   const deleteClient = (id) => setState((s) => ({ ...s, clients: s.clients.filter((c) => c.id !== id) }))
   const setCompany = (company) => setState((s) => ({ ...s, company }))
+  const restoreBackup = (data) => setState(data)
 
   const activeNav = view.name === 'editor' ? 'documents' : view.name
-  const shared = { state, go, createDoc, updateDoc, deleteDoc, convertToInvoice, saveClient, deleteClient, setCompany }
+  const shared = { state, go, createDoc, updateDoc, deleteDoc, convertToInvoice, saveClient, deleteClient, setCompany, restoreBackup }
 
   return (
     <div className="shell">

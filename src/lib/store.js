@@ -42,6 +42,42 @@ export function useStore() {
   return [state, setState]
 }
 
+// ---------- Sauvegarde : export / import d'un fichier JSON ----------
+const BACKUP_APP = 'oi7-devis-factures'
+
+export function exportBackup(state) {
+  const payload = { app: BACKUP_APP, version: 1, exportedAt: new Date().toISOString(), data: state }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `oi7-sauvegarde-${todayISO()}.json`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 10000)
+}
+
+// Renvoie l'état validé ou lève une erreur au message lisible
+export function parseBackup(text) {
+  let payload
+  try {
+    payload = JSON.parse(text)
+  } catch {
+    throw new Error('Ce fichier n’est pas une sauvegarde valide.')
+  }
+  const data = payload && payload.app === BACKUP_APP ? payload.data : null
+  if (!data || !Array.isArray(data.docs) || !Array.isArray(data.clients) || typeof data.company !== 'object') {
+    throw new Error('Ce fichier ne vient pas de cette application.')
+  }
+  return {
+    company: { ...emptyCompany, ...data.company },
+    clients: data.clients,
+    docs: data.docs,
+    counters: data.counters && typeof data.counters === 'object' ? data.counters : {},
+  }
+}
+
 export const TYPES = {
   devis: { label: 'Devis', plural: 'Devis', prefix: 'DEV', dateLabel: 'Valable jusqu’au' },
   facture: { label: 'Facture', plural: 'Factures', prefix: 'FAC', dateLabel: 'Échéance' },

@@ -31,6 +31,15 @@ Une facture « Envoyée » dont l'échéance est dépassée passe automatiquemen
 Dans le navigateur de cet appareil (localStorage), rien n'est envoyé sur internet.
 Vider les données du site efface tous les documents. Un autre navigateur ou appareil ne voit pas ces données.
 
+## Sauvegarder et restaurer
+
+Menu **Entreprise**, section **Sauvegarde des données** :
+- **Télécharger une sauvegarde** : produit un fichier `oi7-sauvegarde-AAAA-MM-JJ.json` (documents, clients, infos entreprise, compteurs de numérotation).
+- **Importer une sauvegarde** : remplace les données du navigateur par celles du fichier, après confirmation.
+
+À faire régulièrement, et avant de changer d'appareil ou de vider le navigateur.
+Le fichier contient les données du client (dont l'IBAN saisi) : à conserver en lieu sûr.
+
 ## Déployer gratuitement
 
 **Vercel** : importer le dépôt, aucune configuration à changer (Vite est détecté, `vercel.json` fourni).
